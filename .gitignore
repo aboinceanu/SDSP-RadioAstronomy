@@ -5,6 +5,10 @@ venv/
 .venv/
 env/
 
+# VS Code specific
+.vscode/
+.history/
+
 # Python specific
 __pycache__/
 *.py[cod]
