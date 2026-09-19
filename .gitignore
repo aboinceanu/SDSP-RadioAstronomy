@@ -1,0 +1,17 @@
+# PyCharm specific
+.idea/
+*.iml
+venv/
+.venv/
+env/
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# PyQt specific
+*.pyc
+ui_*.py
