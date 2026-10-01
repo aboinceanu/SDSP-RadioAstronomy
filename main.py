@@ -18,6 +18,7 @@ class MainApplication:
         self.window.checkMatched.stateChanged.connect(self.update_images)
         self.window.checkMVDR.stateChanged.connect(self.update_images)
         self.window.checkClean.stateChanged.connect(self.update_images)
+        self.window.checkAAR.stateChanged.connect(self.update_images)
 
         self.window.spinResolution.valueChanged.connect(self.on_resolution_update)
         self.window.spinCleanIterations.valueChanged.connect(self.on_CLEAN_parameters_update)
@@ -60,10 +61,12 @@ class MainApplication:
             return
 
         self.window.imageContainer.clear()
+
         active_algorithms = []
         if self.window.checkMatched.isChecked(): active_algorithms.append("matched")
         if self.window.checkMVDR.isChecked(): active_algorithms.append("mvdr")
         if self.window.checkClean.isChecked(): active_algorithms.append("clean")
+        if self.window.checkAAR.isChecked(): active_algorithms.append("aar")
 
         num_cols = 2
 

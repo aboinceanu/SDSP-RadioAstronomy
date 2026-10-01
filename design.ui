@@ -66,6 +66,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="checkAAR">
+        <property name="text">
+         <string>AAR</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QLabel" name="labelResolution">
@@ -92,7 +99,7 @@
         <item>
          <widget class="QSpinBox" name="spinResolution">
           <property name="maximum">
-           <number>150</number>
+           <number>300</number>
           </property>
           <property name="value">
            <number>150</number>
