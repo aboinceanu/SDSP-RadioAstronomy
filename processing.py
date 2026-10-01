@@ -105,6 +105,16 @@ class Processor:
             image[~self.sky_mask] = np.nan
             return image
 
+        if algorithm == "aar":
+            num = np.sum(self.steering_matrix.conj() * (np.linalg.inv(self.covariance_matrix) @ self.steering_matrix), axis=0).real
+            denom = (np.sum(self.steering_matrix.conj() * (np.linalg.inv(self.covariance_matrix)@np.linalg.inv(self.covariance_matrix) @ self.steering_matrix), 
+            axis=0
+            ).real
+            )**2
+            intensities = num/(denom + 1e-12)
+            image = np.full(self.grid_shape, np.nan)
+            image[self.sky_mask] = intensities
+            image[~self.sky_mask] = np.nan            
 
         return image
 
