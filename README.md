@@ -14,14 +14,14 @@ Four imaging algorithms have been implemented which are used for imaging: Matche
 
 The matched beamformer performs a basic scan of the region of interests and returns an estimate of the power incoming from that specific direction. This is given by the formula:
 
-$$ P(\vec{p}) = \vec{a}(\vec{p})^H R_x \vec{a} $$
+$$ P(\vec{p}) = \vec{a}(\vec{p})^H R_x \vec{a}(\vec{p}) $$
 
 where $\vec{a}$ is the steering vector and $R_x$ is the correlation matrix.
 ### MVDR
 
 The MVDR beamformer is a type of beamformer that will set the response of the direction of interest to 1, while suppressing that of the other directions as much as possible. This response is given by:
 
-$$ \displaystyle P(\vec{p}) = \cfrac{1}{\vec{a}(\vec{p})^H R^{-1}_x \vec{a}} $$
+$$ \displaystyle P(\vec{p}) = \cfrac{1}{\vec{a}(\vec{p})^H R^{-1}_x \vec{a}(\vec{p})} $$
 
 ### CLEAN
 
@@ -47,7 +47,7 @@ where ${B_{\text{Synth}}(\vec{p}-\vec{p}_{q})}$ is a Gaussian bell-shape which r
 The AAR beamformer is a type of beamformer that ensures that ensures a spatially uniform noise output. This is described by:
 
 $$
-\displaystyle P(\vec{p}) = \cfrac{\vec{a}(\vec{p})^H R^{-1}_x \vec{a}}{(\vec{a}(\vec{p})^H R^{-2}_x \vec{a})^2}
+\displaystyle P(\vec{p}) = \cfrac{\vec{a}(\vec{p})^H R^{-1}_x \vec{a}(\vec{p})}{(\vec{a}(\vec{p})^H R^{-2}_x \vec{a}(\vec{p}))^2}
 $$
 
 
