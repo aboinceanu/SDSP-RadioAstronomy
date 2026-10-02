@@ -39,3 +39,15 @@ P_{\text{Dirty}}(\vec{p}) := P_{\text{Dirty}}(\vec{p}) - \gamma \hat{\sigma}^2_q
 &P_{\text{Clean}}(\vec{p}) = P_{\text{Dirty}}(\vec{p}) + \displaystyle \sum_q B_{\text{Synth}}(\vec{p} - \vec{p}_q)\ \forall \vec{p}
 \end{align}
 $$
+
+where ${B_{\text{Synth}}(\vec{p}-\vec{p}_{q})}$ is a Gaussian bell-shape which reduces the synthetic overly accurate response of the clean image.
+
+### AAR
+
+The AAR beamformer is a type of beamformer that ensures that ensures a spatially uniform noise output. This is described by:
+
+$$
+\displaystyle P(\vec{p}) = \cfrac{\vec{a}(\vec{p})^H R^{-1}_x \vec{a}}{(\vec{a}(\vec{p})^H R^{-2}_x \vec{a})^2}
+$$
+
+
