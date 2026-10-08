@@ -1,11 +1,14 @@
 import numpy as np
 import scipy
 import scipy as sp
+import scipy.io
 from scipy.ndimage import gaussian_filter
 c = 3e8
 class Processor:
     def __init__(self):
         self.covariance_matrix = None
+        self.covariance_matrix_inv = None
+        self.cov_mat_inv_sq = None
         self.antenna_positions = None
         self.frequency = None
         self.steering_matrix = None
@@ -21,10 +24,12 @@ class Processor:
         self.covariance_matrix = mat_data['Rh']
         self.antenna_positions = mat_data['poslocal']
         self.frequency = mat_data['freq']
+        self.covariance_matrix_inv = np.linalg.inv(self.covariance_matrix)
+        self.cov_mat_inv_sq = self.covariance_matrix_inv @ self.covariance_matrix_inv
         return list(mat_data.keys())
 
     def update_clean_parameters(self, new_iterations, new_loopgain):
-        if self.clean_loopgain != new_iterations:
+        if self.clean_iterations != new_iterations:
             self.clean_iterations = new_iterations
             self.steering_matrix = None
             self.sky_mask = None
@@ -73,7 +78,7 @@ class Processor:
             image[~self.sky_mask] = np.nan
 
         if algorithm == "mvdr":
-            denom = np.sum(self.steering_matrix.conj() * (np.linalg.inv(self.covariance_matrix) @ self.steering_matrix), axis=0).real
+            denom = np.sum(self.steering_matrix.conj() * (self.covariance_matrix_inv @ self.steering_matrix), axis=0).real
             intensities = 1/(denom + 1e-12)
             image = np.full(self.grid_shape, np.nan)
             image[self.sky_mask] = intensities
@@ -81,41 +86,41 @@ class Processor:
 
         if algorithm == "clean":
             J = self.antenna_positions.shape[0]
-            R_copy = self.covariance_matrix.copy()
             clean_intensities = np.zeros(self.steering_matrix.shape[1])
+            dirty_intensities = np.sum(self.steering_matrix.conj() * (self.covariance_matrix @ self.steering_matrix), axis=0).real
+
             for _ in range(self.clean_iterations):
-                dirty_intensities = np.sum(self.steering_matrix.conj() * (R_copy @ self.steering_matrix), axis=0).real
                 peak_idx = np.argmax(dirty_intensities)
                 peak_power = dirty_intensities[peak_idx] / (J ** 2)
+                if peak_power <= 0:
+                    break
                 clean_intensities[peak_idx] += peak_power * self.clean_loopgain
-                a_q = self.steering_matrix[:, peak_idx].reshape(-1, 1)
-                R_copy -= self.clean_loopgain * peak_power  * (a_q @ a_q.conj().T)
+                c_vec = self.steering_matrix.conj().T @ self.steering_matrix[:, peak_idx]
+                c_vec_sq = c_vec.real**2 + c_vec.imag**2
+                dirty_intensities -= peak_power* self.clean_loopgain * c_vec_sq
 
             cleaned_image = np.full(self.grid_shape, 0.0)
             cleaned_image[self.sky_mask] = clean_intensities
 
             synth_beam_sigma = 1
-            syth_smooth = gaussian_filter(cleaned_image, sigma=synth_beam_sigma)
+            impulse = np.zeros(self.grid_shape)
+            impulse[self.grid_shape[0] // 2, self.grid_shape[1] // 2] = 1.0
+            peak = gaussian_filter(impulse, sigma=synth_beam_sigma).max()
+            syth_smooth = gaussian_filter(cleaned_image, sigma=synth_beam_sigma) / peak
 
-            res_dirty_intensities = np.sum(self.steering_matrix.conj() * (R_copy @ self.steering_matrix), axis=0).real
             res_dirty_image = np.full(self.grid_shape, np.nan)
-            res_dirty_image[self.sky_mask] = res_dirty_intensities
+            res_dirty_image[self.sky_mask] = dirty_intensities
 
-            image = syth_smooth + res_dirty_image
+            image = syth_smooth + res_dirty_image/(J**2)
             image[~self.sky_mask] = np.nan
             return image
 
         if algorithm == "aar":
-            num = np.sum(self.steering_matrix.conj() * (np.linalg.inv(self.covariance_matrix) @ self.steering_matrix), axis=0).real
-            denom = (np.sum(self.steering_matrix.conj() * (np.linalg.inv(self.covariance_matrix)@np.linalg.inv(self.covariance_matrix) @ self.steering_matrix), axis=0).real)**2
+            num = np.sum(self.steering_matrix.conj() * (self.covariance_matrix_inv @ self.steering_matrix), axis=0).real
+            denom = np.sum(self.steering_matrix.conj() * (self.cov_mat_inv_sq @ self.steering_matrix), axis=0).real ** 2
             intensities = num/(denom + 1e-12)
             image = np.full(self.grid_shape, np.nan)
             image[self.sky_mask] = intensities
             image[~self.sky_mask] = np.nan            
 
         return image
-
-
-
-
-

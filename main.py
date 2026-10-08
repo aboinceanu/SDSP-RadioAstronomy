@@ -1,10 +1,17 @@
 import sys
 import os
 import pyqtgraph as pg
+import pyqtgraph.exporters
 from pyqtgraph import GraphicsLayoutWidget
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from processing import Processor
+
+def resource_path(name):
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, name)
+
+
 class MainApplication:
     def __init__(self):
         self.app = QApplication(sys.argv)
@@ -12,8 +19,10 @@ class MainApplication:
 
         loader = QUiLoader()
         loader.registerCustomWidget(GraphicsLayoutWidget)
-        self.window = loader.load("design.ui")
+        self.window = loader.load(resource_path("design.ui"))
         self.window.fileSelectBtn.clicked.connect(self.open_file_dialog)
+        self.window.imgExportBtn.clicked.connect(self.export_image)
+        self.window.imageContainer.setBackground('#2e2e2e')
 
         self.window.checkMatched.stateChanged.connect(self.update_images)
         self.window.checkMVDR.stateChanged.connect(self.update_images)
@@ -37,7 +46,7 @@ class MainApplication:
             self.window.statusLabel.setText(f"Successfully uploaded: {file_name}")
 
             loaded_vars = self.processor.load_dataset(file_path)
-            print(f"Loaded variables: {loaded_vars}")
+            #print(f"Loaded variables: {loaded_vars}")
         else:
             self.window.statusLabel.setText(f"Upload failed. Please try again.")
 
@@ -48,8 +57,6 @@ class MainApplication:
     def on_CLEAN_parameters_update(self):
         iterations = self.window.spinCleanIterations.value()
         loopgain = self.window.doubleSpinCleanLoopGain.value()
-
-        print(f"--> GUI Registered: Iterations={iterations}, LoopGain={loopgain}")  # Check if this prints!
 
         self.processor.update_clean_parameters(iterations, loopgain)
 
@@ -70,23 +77,72 @@ class MainApplication:
 
         num_cols = 2
 
+        n = len(active_algorithms)
+        num_rows = (n + 1) // 2 if n > 1 else 1
+
         for i, algo in enumerate(active_algorithms):
-            row = i // num_cols
-            col = i % num_cols
+            if n == 1:
+                row, col, colspan = 0, 0, 4
+            else:
+                row = i // 2
+                col = (i % 2) * 2
+                if n % 2 == 1 and i == n - 1:
+                    col = 1
+                colspan = 2
 
             image_data = self.processor.compute_image(algorithm=algo)
 
-            plot_item = self.window.imageContainer.addPlot(row=row, col=col)
+            plot_item = self.window.imageContainer.addPlot(row=row, col=col, colspan=colspan)
             plot_item.setTitle(algo.upper())
             plot_item.setAspectLocked(True)
+            plot_item.getAxis('left').setWidth(40)
+            plot_item.getAxis('bottom').setHeight(30)
+
+            h, w = image_data.shape
+            plot_item.setRange(xRange=(0, h), yRange=(0, w), padding=0)
+            plot_item.disableAutoRange()
 
             img = pg.ImageItem(image_data)
             img.setColorMap(pg.colormap.get('inferno'))
             plot_item.addItem(img)
 
+        layout = self.window.imageContainer.ci.layout
+        for c in range(4):
+            layout.setColumnStretchFactor(c, 1)
+        for r in range(2):
+            layout.setRowStretchFactor(r, 1 if r < num_rows else 0)
+
+    def export_image(self):
+        if self.processor.covariance_matrix is None:
+            self.set_status(self.window.exportStatusLabel, "Nothing to export: No data", error=True)
+            return
+        export_file_path, selected_file_type = QFileDialog.getSaveFileName(
+            self.window,
+            "Export Image",
+            "sky image.png",
+            "PNG (*.png);; JPG (*.jpg);; SVG (*.svg)"
+        )
+        if not export_file_path:
+            return
+        ext = os.path.splitext(export_file_path)[1].lower()
+        if ext == ".svg":
+            exporter = pg.exporters.SVGExporter(self.window.imageContainer.scene())
+        elif ext in (".png", ".jpg", ".jpeg"):
+            exporter = pg.exporters.ImageExporter(self.window.imageContainer.scene())
+            exporter.parameters()['width'] = 2000
+        else:
+            self.set_status(self.window.exportStatusLabel, "Invalid file type", error=True)
+        exporter.export(export_file_path)
+        self.set_status(self.window.exportStatusLabel, "Image exported successfully!", error=False)
+
+
+    def set_status(self, label, text, error=False):
+        label.setText(text)
+        label.setStyleSheet("color: #c62828;" if error else "color: #2e7d32;")
+
     def run(self):
         self.window.show()
-        sys.exit(self.app.exec_())
+        sys.exit(self.app.exec())
 
 if __name__ == "__main__":
     main_app = MainApplication()

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>908</width>
-    <height>606</height>
+    <height>584</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -99,7 +99,7 @@
         <item>
          <widget class="QSpinBox" name="spinResolution">
           <property name="maximum">
-           <number>300</number>
+           <number>500</number>
           </property>
           <property name="value">
            <number>150</number>
@@ -182,7 +182,7 @@
                <enum>QAbstractSpinBox::StepType::DefaultStepType</enum>
               </property>
               <property name="value">
-               <double>0.100000000000000</double>
+               <double>0.050000000000000</double>
               </property>
              </widget>
             </item>
@@ -208,7 +208,46 @@
      </layout>
     </item>
     <item>
-     <widget class="GraphicsLayoutWidget" name="imageContainer"/>
+     <layout class="QVBoxLayout" name="verticalLayout_6">
+      <item>
+       <widget class="GraphicsLayoutWidget" name="imageContainer"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QPushButton" name="imgExportBtn">
+            <property name="text">
+             <string>Export Image</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="exportStatusLabel">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
