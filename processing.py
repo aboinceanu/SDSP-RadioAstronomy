@@ -74,14 +74,14 @@ class Processor:
         if algorithm == "matched":
             intensities = np.sum(self.steering_matrix.conj() * (self.covariance_matrix @ self.steering_matrix), axis=0).real
             image = np.full(self.grid_shape, np.nan)
-            image[self.sky_mask] = intensities
+            image[self.sky_mask] = 10*np.log10(intensities/(self.antenna_positions.shape[0]**2))
             image[~self.sky_mask] = np.nan
 
         if algorithm == "mvdr":
             denom = np.sum(self.steering_matrix.conj() * (self.covariance_matrix_inv @ self.steering_matrix), axis=0).real
             intensities = 1/(denom + 1e-12)
             image = np.full(self.grid_shape, np.nan)
-            image[self.sky_mask] = intensities
+            image[self.sky_mask] = 10*np.log10(intensities)
             image[~self.sky_mask] = np.nan
 
         if algorithm == "clean":
@@ -111,7 +111,7 @@ class Processor:
             res_dirty_image = np.full(self.grid_shape, np.nan)
             res_dirty_image[self.sky_mask] = dirty_intensities
 
-            image = syth_smooth + res_dirty_image/(J**2)
+            image = 10*np.log10(syth_smooth + res_dirty_image/(J**2))
             image[~self.sky_mask] = np.nan
             return image
 
@@ -120,7 +120,7 @@ class Processor:
             denom = np.sum(self.steering_matrix.conj() * (self.cov_mat_inv_sq @ self.steering_matrix), axis=0).real ** 2
             intensities = num/(denom + 1e-12)
             image = np.full(self.grid_shape, np.nan)
-            image[self.sky_mask] = intensities
+            image[self.sky_mask] = 10*np.log10(intensities)
             image[~self.sky_mask] = np.nan            
 
         return image

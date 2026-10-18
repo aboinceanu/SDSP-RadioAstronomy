@@ -2,6 +2,8 @@ import sys, os
 import traceback
 import pyqtgraph as pg
 import pyqtgraph.exporters
+import matplotlib as plt
+import numpy as np
 from pyqtgraph import GraphicsLayoutWidget
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtUiTools import QUiLoader
@@ -21,10 +23,11 @@ class MainApplication:
 
         loader = QUiLoader()
         loader.registerCustomWidget(GraphicsLayoutWidget)
+        pg.setConfigOption('foreground', '#000000')
         self.window = loader.load(resource_path("design.ui"))
         self.window.fileSelectBtn.clicked.connect(self.open_file_dialog)
         self.window.imgExportBtn.clicked.connect(self.export_image)
-        self.window.imageContainer.setBackground('#2e2e2e')
+        self.window.imageContainer.setBackground('#FFFFFF')
 
         self.window.checkMatched.stateChanged.connect(self.update_images)
         self.window.checkMVDR.stateChanged.connect(self.update_images)
@@ -76,7 +79,7 @@ class MainApplication:
         if self.window.checkAAR.isChecked(): active_algorithms.append("aar")
 
         num_cols = 2
-
+        cmap = pg.colormap.get('inferno',source='matplotlib')
         n = len(active_algorithms)
         num_rows = (n + 1) // 2 if n > 1 else 1
 
@@ -103,7 +106,13 @@ class MainApplication:
             plot_item.disableAutoRange()
 
             img = pg.ImageItem(image_data)
-            img.setColorMap(pg.colormap.get('inferno'))
+            img.setColorMap(cmap)
+            lo = np.nanmin(image_data)
+            hi = np.nanpercentile(image_data, 99.5)  # or np.nanmax(image_data)
+
+            bar = pg.ColorBarItem(values=(lo, hi), colorMap=cmap,
+                                  interactive=False, label='Power')
+            bar.setImageItem(img, insert_in=plot_item)
             plot_item.addItem(img)
 
         layout = self.window.imageContainer.ci.layout
