@@ -102,10 +102,12 @@ class MainApplication:
             plot_item.getAxis('bottom').setHeight(30)
 
             h, w = image_data.shape
-            plot_item.setRange(xRange=(0, h), yRange=(0, w), padding=0)
+            plot_item.setRange(xRange=(-1,1), yRange=(-1,1), padding=0)
             plot_item.disableAutoRange()
 
             img = pg.ImageItem(image_data)
+            img.setPos(-1, -1)
+            img.setRect(QRectF(0, 0, 2, 2))
             img.setColorMap(cmap)
             lo = np.nanmin(image_data)
             hi = np.nanpercentile(image_data, 99.5)  # or np.nanmax(image_data)
